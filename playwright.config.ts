@@ -36,9 +36,24 @@ export default defineConfig({
       testMatch: /global.setup\.ts/,
     },
     {
-      name: 'chromium',
+      name: 'onboarding',
       use: {...devices['Desktop Chrome']},
+      testMatch: /onboarding.spec\.ts/,
       dependencies: ['setup'],
+    },
+    {
+      name: 'auth',
+      use: {...devices['Desktop Chrome']},
+      testMatch: /auth.setup\.ts/,
+      // dependencies: ['onboarding'],
+    },
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'playwright/.auth/user.json',
+      },
+      dependencies: ['auth'],
     },
 
     // {

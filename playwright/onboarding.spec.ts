@@ -72,13 +72,24 @@ test('On boarding path', async ({page, request}) => {
 
   await expect(page.locator('modal-wrapper')).toBeVisible();
 
-  await request.post('http://localhost:8080/lumeer-engine/rest/users/current/emailVerified', {
+  const c = await request.post('http://localhost:8080/lumeer-engine/rest/users/current/emailVerified', {
+    headers: {
+      Authorization: `Bearer ${process.env.TEST_AUTH_TOKEN}`,
+    },
+  });
+  // eslint-disable-next-line no-console
+  console.log(await c.text());
+
+  await page.waitForLoadState('networkidle');
+
+  await expect(page.locator('iframe[title="Lumeer: Quick Application Overview"]')).toBeVisible();
+
+  const x = await request.delete('http://localhost:8080/lumeer-engine/rest/users/current', {
     headers: {
       Authorization: `Bearer ${process.env.TEST_AUTH_TOKEN}`,
     },
   });
 
-  await page.waitForLoadState('networkidle');
-
-  await expect(page.locator('iframe[title="Lumeer: Quick Application Overview"]')).toBeVisible();
+  // eslint-disable-next-line no-console
+  console.log(await x.text());
 });
