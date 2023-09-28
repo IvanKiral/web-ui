@@ -29,31 +29,40 @@ test('application-tour test', async ({page}) => {
   await expect(page.locator('div[id=driver-popover-item]')).toBeVisible();
 
   await expect(page.locator('div[class=driver-popover-title]')).toHaveText('Welcome to Lumeer');
-  await page.locator('button[class=driver-next-btn]').click();
+  await expect(page.locator('#driver-highlighted-element-stage')).toBeVisible();
+  await page.getByRole('button', {name: 'Next'}).click();
 
   await expect(page.locator('div[class=driver-popover-title]')).toHaveText('Access your information');
-  await page.locator('button[class="driver-next-btn"]').click();
+  await expect(page.locator('#driver-highlighted-element-stage')).toBeVisible();
+  await page.getByRole('button', {name: 'Next'}).click();
 
   await expect(page.locator('div[class=driver-popover-title]')).toHaveText('See the tables');
-  await page.locator('button[class=driver-next-btn]').click();
+  await expect(page.locator('#driver-highlighted-element-stage')).toBeVisible();
+  await page.getByRole('button', {name: 'Next'}).click();
 
   await expect(page.locator('div[class=driver-popover-title]')).toHaveText('Search for information');
-  await page.locator('button[class="driver-next-btn"]').click();
+  await expect(page.locator('#driver-highlighted-element-stage')).toBeVisible();
+  await page.getByRole('button', {name: 'Next'}).click();
 
   await expect(page.locator('div[class=driver-popover-title]')).toHaveText('Perspectives');
-  await page.locator('button[class="driver-next-btn"]').click();
+  await expect(page.locator('#driver-highlighted-element-stage')).toBeVisible();
+  await page.getByRole('button', {name: 'Next'}).click();
 
   await expect(page.locator('div[class=driver-popover-title]')).toHaveText('Views and sharing');
-  await page.locator('button[class="driver-next-btn"]').click();
+  await expect(page.locator('#driver-highlighted-element-stage')).toBeVisible();
+  await page.getByRole('button', {name: 'Next'}).click();
 
   await expect(page.locator('div[class=driver-popover-title]')).toHaveText('Help with Lumeer');
-  await page.locator('button[class="driver-next-btn"]').click();
+  await expect(page.locator('#driver-highlighted-element-stage')).toBeVisible();
+  await page.getByRole('button', {name: 'Next'}).click();
 
   await expect(page.locator('div[class=driver-popover-title]')).toHaveText('Invite teammates');
-  await page.locator('button[class="driver-next-btn"]').click();
+  await expect(page.locator('#driver-highlighted-element-stage')).toBeVisible();
+  await page.getByRole('button', {name: 'Next'}).click();
 
   await expect(page.locator('div[class=driver-popover-title]')).toHaveText('Return to this Tour');
-  await page.locator('button[class="driver-next-btn"]').click();
+  await expect(page.locator('#driver-highlighted-element-stage')).toBeVisible();
+  await page.getByRole('button', {name: 'Onward!'}).click();
 
   await expect(page.locator('div[id=driver-popover-item]')).not.toBeVisible();
 });
