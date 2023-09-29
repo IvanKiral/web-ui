@@ -19,37 +19,194 @@
 
 import {test, expect} from '@playwright/test';
 
-test('basic full text search test', async ({page}) => {
+test.describe.configure({mode: 'serial'});
+
+test('import table test', async ({page}) => {
   await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
-  await page.locator('input[placeholder="Type anything you search for…"]').click();
-  await page.locator('input[placeholder="Type anything you search for…"]').fill('browse');
+
+  await page.setInputFiles('input[type="file"]', 'playwright/data.csv');
+
+  await expect(page.getByRole('link').filter({has: page.locator(`div:text("data")`)})).toBeVisible();
+
+  await page
+    .getByRole('link')
+    .filter({has: page.locator(`div:text("data")`)})
+    .click();
+  await page.waitForTimeout(200);
+});
+
+test('update imported table test', async ({page}) => {
+  await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
+
+  await page.getByRole('link', {name: 'Tables'}).click();
+  await page
+    .getByRole('link')
+    .filter({has: page.locator(`div:text("data")`)})
+    .click();
+
+  await page.locator('table-column-input:has-text("Created")').click({button: 'right'});
+  await page.getByRole('menuitem', {name: 'Attribute settings...'}).click();
+
+  await page.locator('button:has-text("None")').click();
+
+  await page.locator('a').filter({hasText: 'Date'}).click();
+  await page.getByRole('button', {name: 'DD.MM.YYYY'}).click();
+  await page
+    .locator('a')
+    .filter({hasText: /^YYYY-MM-DD$/})
+    .click();
+
+  await page.getByRole('button', {name: 'Save'}).click();
+
+  await page.locator('table-column-input:has-text("Status")').click({button: 'right'});
+  await page.getByRole('menuitem', {name: 'Attribute settings...'}).click();
+
+  await page.locator('button:has-text("None")').click();
+
+  await page.locator('a').filter({hasText: 'Selection'}).click();
+  await page.getByRole('button', {name: 'Save'}).click();
+  await page.waitForTimeout(200);
+});
+
+test('basic full text search test', async ({page}) => {
+  const searchedWord = 'Playwright';
+  await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
+  await page.locator('search-input').click();
+  await page.locator('search-input input').fill(searchedWord);
   await page.locator('search-box').press('Enter');
 
-  await page.getByRole('link', {name: 'User stories'}).click();
+  await page.getByRole('link', {name: 'data'}).click();
   await page.waitForLoadState('networkidle');
 
   // 2 for result, +1 for placeholder row.
   await expect(page.locator('table-body').locator('table-primary-row')).toHaveCount(2 + 1);
   const rows = await page.locator('table-body').locator('table-primary-row').all();
-  await expect(rows[0]).toHaveText(/.*browse.*/);
-  await expect(rows[1]).toHaveText(/.*browse.*/);
+  const wordRegex = new RegExp(`.*${searchedWord}.*`, 'gm');
+  await expect(rows[0]).toHaveText(wordRegex);
+  await expect(rows[1]).toHaveText(wordRegex);
 });
 
-test('search test with specifying table', async ({page}) => {
+test('full text search test with table specified', async ({page}) => {
+  const searchedWord = 'tests';
   await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
-  await page.locator('input[placeholder="Type anything you search for…"]').click();
-  await page.locator('input[placeholder="Type anything you search for…"]').fill('Tasks');
 
-  await page.getByText('Tasks Table').click();
+  await page.locator('search-input').click();
+  await page.locator('search-input input').fill('data');
+  await page.getByText('data Table').click();
 
-  await page.locator('input[placeholder="Search or filter…"]').click();
-  await page.getByText('Assignee Attribute').click();
+  await page.locator('search-input').click();
+  await page.locator('search-input input').fill(searchedWord);
+  await page.locator('search-box').press('Enter');
 
-  await page.locator('data-input div').click();
-  await page.locator('a:has-text("uitest@lumeer.io")').click();
+  await page.getByRole('link', {name: 'data'}).click();
+  await page.waitForLoadState('networkidle');
+
+  // 2 for result, +1 for placeholder row.
+  await expect(page.locator('table-body').locator('table-primary-row')).toHaveCount(3 + 1);
+  const rows = await page.locator('table-body').locator('table-primary-row').all();
+  const wordRegex = new RegExp(`.*${searchedWord}.*`, 'gm');
+  await expect(rows[0]).toHaveText(wordRegex);
+  await expect(rows[1]).toHaveText(wordRegex);
+  await expect(rows[1]).toHaveText(wordRegex);
+});
+
+test('search test with specifying table and Attribute', async ({page}) => {
+  await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
+  await page.locator('search-input').click();
+  await page.locator('search-input input').fill('data');
+
+  await page.getByText('data Table').click();
+
+  await page.locator('search-input').click();
+  //for some reason needed, without it the test fails
+  await page.waitForTimeout(500);
+
+  await page.getByText('Status Attribute').click();
+
+  await expect(page.locator('data-input select-data-input div')).toBeAttached();
+  await page.locator('data-input select-data-input div').click();
+  await page.locator('a:has-text("In progress")').click();
+  await page.locator('search-input').press('Enter');
+
+  await page.getByRole('link', {name: 'data'}).click();
+  await page.waitForLoadState('networkidle');
+
+  //+ 1 for placeholder row
+  await expect(page.locator('table-primary-row')).toHaveCount(3 + 1);
+  await expect(page.locator('table-primary-row div:has-text("In progress")')).toHaveCount(3 + 1);
+
+  await page.getByText('Status Has SomeIn progress').click();
+  await page.waitForTimeout(200);
+
+  await expect(page.locator('filter-builder-content')).toBeAttached();
+  await page.locator('filter-builder-content data-input select-data-input div').click();
+  await page.locator('a:has-text("Done")').click();
   await page.locator('input[placeholder="Search or filter…"]').press('Enter');
 
-  await expect(page.locator('tasks-group task-wrapper')).toHaveCount(6);
+  await expect(page.locator('table-primary-row')).toHaveCount(4 + 1);
+  await expect(page.locator('table-primary-row div:has-text("In progress")')).toHaveCount(3 + 1);
+  await expect(page.locator('table-primary-row div:has-text("Done")')).toHaveCount(1);
+
+  await page.waitForTimeout(200);
+});
+
+test('search with date', async ({page}) => {
+  await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
+
+  await page.locator('search-input').click();
+  await page.locator('search-input input').fill('data');
+  await page.getByText('data Table').click();
+
+  await page.locator('search-input').click();
+  //for some reason needed, without it the test fails
+  await page.getByText('Created Attribute').click();
+  await page.waitForTimeout(200);
+  await page.getByText('Is Between').click();
+
+  await page.locator('filter-builder-content input').first().click();
+  await page.locator('filter-builder-content input').first().fill('2023-08-01');
+
+  await page.locator('filter-builder-content input').last().click();
+  await page.locator('filter-builder-content input').last().fill('2023-09-01');
+
+  await page.getByRole('link', {name: 'data'}).click();
+  await page.waitForLoadState('networkidle');
+
+  await expect(page.locator('table-primary-row')).toHaveCount(2 + 1);
+  await page.waitForTimeout(1000);
+});
+
+test('search test with multiple coniditions', async ({page}) => {
+  await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
+
+  await page.locator('search-input').click();
+  await page.locator('search-input input').fill('data');
+  await page.getByText('data Table').click();
+
+  await page.locator('search-input').click();
+  //for some reason needed, without it the test fails
+  await page.waitForTimeout(500);
+  await page.getByText('Status Attribute').click();
+  await expect(page.locator('data-input select-data-input div')).toBeAttached();
+  await page.locator('data-input select-data-input div').click();
+  await page.locator('a:has-text("In progress")').click();
+  await page.locator('search-input').press('Enter');
+
+  await page.locator('search-input').click();
+  await page.getByText('Created Attribute').click();
+  await page.waitForTimeout(200);
+  await page.getByText('Is Before').click();
+  await page.locator('filter-builder-content input').click();
+  await page.locator('filter-builder-content input').fill('2023-08-01');
+
+  await page.getByRole('link', {name: 'data'}).click();
+  await page.waitForLoadState('networkidle');
+
+  //+ 1 for placeholder row
+  await expect(page.locator('table-primary-row')).toHaveCount(2 + 1);
+  await expect(page.locator('table-primary-row div:has-text("In progress")')).toHaveCount(2 + 1);
+
+  await expect(page.locator('table-primary-row div:has-text("In progress")')).toHaveCount(2 + 1);
 
   await page.waitForTimeout(200);
 });
