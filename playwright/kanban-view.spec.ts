@@ -17,15 +17,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import {test, expect, Locator} from '@playwright/test';
+import {test, expect, Locator, Page} from '@playwright/test';
 
 test.describe.configure({mode: 'serial'});
 
-const url =
-  'http://localhost:7000/ui/w/TSTLM/SCRUM/view/kanban?q=eyJzIjpbeyJpIjoiMTY5NTk5MTMzOTk1OTEwODExYzk2ZTY3NWEiLCJjIjoiNjUxNjZlMjZiNDJhZWYwYTgxODVhODM0In1dfQd30a8ad9';
+const prepareKanbanBoard = async (page: Page) => {
+  await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
+
+  await page.getByRole('link', {name: 'Tables'}).click();
+  const dataLink = await page
+    .getByRole('link')
+    .filter({has: page.locator(`div:text("data")`)})
+    .getAttribute('href');
+
+  const newUrl = dataLink.replace('table', 'kanban');
+  await page.goto(newUrl);
+  await page.waitForLoadState('networkidle');
+
+  await page.getByRole('button', {name: 'Select attribute'}).waitFor();
+  await expect(page.getByRole('button', {name: 'Select attribute'})).toBeVisible();
+  await page.getByRole('button', {name: 'Select attribute'}).click();
+  //in some cases without timeout it fails
+  await page.waitForTimeout(200);
+  await page.locator('a').filter({hasText: 'Status'}).click();
+  await page.waitForTimeout(200);
+};
 
 test('Kanban board set header', async ({page}) => {
-  await page.goto(url);
+  await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
+
+  await page.getByRole('link', {name: 'Tables'}).click();
+  const dataLink = await page
+    .getByRole('link')
+    .filter({has: page.locator(`div:text("data")`)})
+    .getAttribute('href');
+
+  const newUrl = dataLink.replace('table', 'kanban');
+  await page.goto(newUrl);
   await page.waitForLoadState('networkidle');
 
   await page.getByRole('button', {name: 'Select attribute'}).click();
@@ -35,7 +63,7 @@ test('Kanban board set header', async ({page}) => {
 
   const columns = await page.locator('kanban-column').all();
 
-  const checkStatus = async (col: Locator, status: 'Done' | 'In progress' | 'In Backlog') => {
+  const checkStatus = async (col: Locator, status: 'Done' | 'In progress' | 'In backlog') => {
     const posts = await col.locator('post-it').all();
 
     await Promise.all(
@@ -50,9 +78,9 @@ test('Kanban board set header', async ({page}) => {
   await expect(columns[0].locator('post-it')).toHaveCount(1);
   await checkStatus(columns[0], 'Done');
 
-  await expect(columns[1].locator('kanban-column-header')).toHaveText('In Backlog');
+  await expect(columns[1].locator('kanban-column-header')).toHaveText('In backlog');
   await expect(columns[1].locator('post-it')).toHaveCount(1);
-  await checkStatus(columns[1], 'In Backlog');
+  await checkStatus(columns[1], 'In backlog');
 
   await expect(columns[2].locator('kanban-column-header')).toHaveText('In progress');
   await expect(columns[2].locator('post-it')).toHaveCount(3);
@@ -60,11 +88,7 @@ test('Kanban board set header', async ({page}) => {
 });
 
 test('dragging', async ({page}) => {
-  await page.goto(url);
-  await page.waitForLoadState('networkidle');
-
-  await page.getByRole('button', {name: 'Select attribute'}).click();
-  await page.locator('a').filter({hasText: 'Status'}).click();
+  await prepareKanbanBoard(page);
 
   // simulating drag and drop
   await page.locator('kanban-column').nth(2).locator('post-it').nth(0).hover();
@@ -92,13 +116,7 @@ test('dragging', async ({page}) => {
 });
 
 test('tuning the rows', async ({page}) => {
-  await page.goto(url);
-  await page.waitForLoadState('networkidle');
-
-  await page.getByRole('button', {name: 'Select attribute'}).click();
-  await page.waitForTimeout(200);
-  await page.locator('a').filter({hasText: 'Status'}).click();
-  await page.waitForTimeout(200);
+  await prepareKanbanBoard(page);
 
   await page.locator('settings-button button').click();
   await page.locator('attribute-settings').filter({hasText: 'Created'}).click();
@@ -109,7 +127,7 @@ test('tuning the rows', async ({page}) => {
 
   await Promise.all(
     postsRowsLocator.map(async p => {
-      await expect(p).toHaveCount(3);
+      await expect(p).toHaveCount(4);
     })
   );
 
@@ -120,21 +138,13 @@ test('tuning the rows', async ({page}) => {
 
   await Promise.all(
     postsRowsLocator.map(async p => {
-      await expect(p).toHaveCount(5);
+      await expect(p).toHaveCount(6);
     })
   );
-
-  await page.waitForTimeout(1000);
 });
 
-test('drag the whole collumns', async ({page}) => {
-  await page.goto(url);
-  await page.waitForLoadState('networkidle');
-
-  await page.getByRole('button', {name: 'Select attribute'}).click();
-  await page.waitForTimeout(200);
-  await page.locator('a').filter({hasText: 'Status'}).click();
-  await page.waitForTimeout(200);
+test('drag the whole columns', async ({page}) => {
+  await prepareKanbanBoard(page);
 
   await page.locator('kanban-column').nth(1).locator('kanban-column-header').hover();
   await page.mouse.down();
@@ -142,7 +152,7 @@ test('drag the whole collumns', async ({page}) => {
   await page.locator('kanban-column').locator('kanban-column-header').nth(0).hover();
   await page.mouse.up();
 
-  await expect(page.locator('kanban-column-header').nth(0)).toHaveText('In Backlog');
+  await expect(page.locator('kanban-column-header').nth(0)).toHaveText('In backlog');
   await expect(page.locator('kanban-column-header').nth(1)).toHaveText('Done');
 
   await page.locator('kanban-column').nth(0).locator('kanban-column-header').hover();
@@ -152,5 +162,87 @@ test('drag the whole collumns', async ({page}) => {
   await page.mouse.up();
 
   await expect(page.locator('kanban-column-header').nth(0)).toHaveText('Done');
-  await expect(page.locator('kanban-column-header').nth(1)).toHaveText('In Backlog');
+  await expect(page.locator('kanban-column-header').nth(1)).toHaveText('In backlog');
+});
+
+test('use due dates in kanban board', async ({page}) => {
+  await prepareKanbanBoard(page);
+
+  await page.getByRole('button', {name: 'Select due date'}).click();
+  await page.locator('a').filter({hasText: 'Created'}).click();
+  await Promise.all(
+    (
+      await page.locator('post-it-header').all()
+    ).map(async p => {
+      await expect(p).toContainText('Past due');
+    })
+  );
+
+  await page.locator('kanban-stem-config data-input').click();
+  await page.locator('a').filter({hasText: 'Done'}).click();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('kanban-column:has-text("Done")')).not.toContainText('Past due');
+});
+
+test('summarize the cards', async ({page}) => {
+  await prepareKanbanBoard(page);
+
+  await page.getByRole('button', {name: 'Select attribute'}).click();
+  await page.locator('a').filter({hasText: 'Points'}).click();
+
+  await expect(page.locator('kanban-column-header').nth(0)).toContainText('11');
+  await expect(page.locator('kanban-column-header').nth(1)).toContainText('3');
+  await expect(page.locator('kanban-column-header').nth(2)).toContainText('37');
+});
+
+test('Add new record', async ({page}) => {
+  await prepareKanbanBoard(page);
+
+  await page
+    .locator('kanban-column')
+    .filter({hasText: 'In backlog'})
+    .locator('button:has-text("Create New Record")')
+    .click();
+
+  await page.locator('data-resource-data-row').filter({hasText: 'Title'}).getByRole('textbox').dblclick();
+  await page.locator('data-resource-data-row').filter({hasText: 'Title'}).getByRole('textbox').fill('New record');
+  await page.locator('span').filter({hasText: 'Title'}).click();
+
+  await page.locator('datetime-data-input').getByRole('textbox').click();
+  await page.locator('datetime-data-input').getByRole('textbox').dblclick();
+  await page.locator('datetime-data-input').getByRole('textbox').fill('2023-09-05');
+  await page.keyboard.press('Enter');
+
+  await page.locator('data-resource-data-row').filter({hasText: 'Information'}).getByRole('textbox').dblclick();
+  await page
+    .locator('data-resource-data-row')
+    .filter({hasText: 'Information'})
+    .getByRole('textbox')
+    .fill('Test information');
+  await page.keyboard.press('Enter');
+
+  await page.locator('button').filter({hasText: 'Done'}).click();
+
+  await expect(
+    page.locator('kanban-column').filter({hasText: 'In backlog'}).locator('post-it').filter({hasText: 'New record'})
+  ).toBeVisible();
+});
+
+test('edit record', async ({page}) => {
+  await prepareKanbanBoard(page);
+
+  await page.getByText('Test information', {exact: true}).dblclick();
+  await page.getByRole('textbox', {name: 'Test information'}).fill('Test information edited');
+  await page.keyboard.press('Enter');
+
+  await expect(page.locator('post-it-row:has-text("Test information edited")')).toBeVisible();
+});
+
+test('remove record', async ({page}) => {
+  await prepareKanbanBoard(page);
+
+  await page.locator('post-it:has-text("New Record")').getByTitle('Delete').click();
+  await page.getByRole('button', {name: 'Yes'}).click();
+
+  await expect(page.locator('post-it-row:has-text("New Record")')).not.toBeVisible();
 });

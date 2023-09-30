@@ -60,11 +60,16 @@ test('update imported table test', async ({page}) => {
 
   await page.locator('table-column-input:has-text("Status")').click({button: 'right'});
   await page.getByRole('menuitem', {name: 'Attribute settings...'}).click();
-
   await page.locator('button:has-text("None")').click();
-
   await page.locator('a').filter({hasText: 'Selection'}).click();
   await page.getByRole('button', {name: 'Save'}).click();
+
+  await page.locator('table-column-input:has-text("Points")').click({button: 'right'});
+  await page.getByRole('menuitem', {name: 'Attribute settings...'}).click();
+  await page.locator('button:has-text("None")').click();
+  await page.locator('a').filter({hasText: 'Number'}).click();
+  await page.getByRole('button', {name: 'Save'}).click();
+
   await page.waitForTimeout(200);
 });
 
