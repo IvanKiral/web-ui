@@ -31,12 +31,12 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    {
-      name: 'onboarding',
-      use: {...devices['Desktop Chrome']},
-      testMatch: /onboarding.spec\.ts/,
-      teardown: 'teardown',
-    },
+    // {
+    //   name: 'onboarding',
+    //   use: {...devices['Desktop Chrome']},
+    //   testMatch: /onboarding.spec\.ts/,
+    //   // teardown: 'teardown',
+    // },
     {
       name: 'tests',
       use: {
@@ -45,11 +45,18 @@ export default defineConfig({
       },
       testMatch: '*playwright/*.spec.ts',
       testIgnore: /onboarding.spec\.ts/,
-      dependencies: ['onboarding'],
+      dependencies: ['auth'],
+      // dependencies: ['onboarding'],
     },
     {
-      name: 'teardown',
-      testMatch: /global.teardown\.ts/,
+      name: 'auth',
+      use: {...devices['Desktop Chrome']},
+      testMatch: /auth.setup\.ts/,
+      // dependencies: ['onboarding'],
     },
+    // {
+    //   name: 'teardown',
+    //   testMatch: /global.teardown\.ts/,
+    // },
   ],
 });
