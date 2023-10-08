@@ -17,7 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {ep} from '@fullcalendar/core/internal-common';
 import {test, expect} from '@playwright/test';
+import exp from 'constants';
 
 test.describe.configure({mode: 'serial'});
 
@@ -36,6 +38,8 @@ test('import table test', async ({page}) => {
 
 test('update imported table test', async ({page}) => {
   await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
+
+  await expect(page.getByRole('link', {name: 'Tables'})).toBeVisible();
 
   await page.getByRole('link', {name: 'Tables'}).click();
   await page

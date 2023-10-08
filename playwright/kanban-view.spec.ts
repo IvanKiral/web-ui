@@ -18,7 +18,7 @@
  */
 
 import {test, expect, Locator, Page} from '@playwright/test';
-import {prepareTableViaApi} from './utils/apiCalls';
+import {prepareTableViaApi} from './utils/helpers';
 
 test.describe.configure({mode: 'serial'});
 
@@ -32,6 +32,8 @@ const prepareKanbanBoard = async (page: Page) => {
   await page.goto('http://localhost:7000/ui/w/TSTLM/SCRUM/view/search/all');
 
   await page.getByRole('link', {name: 'Tables'}).click();
+  await expect(page.getByRole('link', {name: tableName})).toBeVisible();
+
   const dataLink = await page
     .getByRole('link')
     .filter({has: page.locator(`div:text("${tableName}")`)})
@@ -45,9 +47,9 @@ const prepareKanbanBoard = async (page: Page) => {
   await expect(page.getByRole('button', {name: 'Select attribute'})).toBeVisible();
   await page.getByRole('button', {name: 'Select attribute'}).click();
   //in some cases without timeout it fails
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(500);
   await page.locator('a').filter({hasText: 'Status'}).click();
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(500);
 };
 
 test('Kanban board set header', async ({page}) => {
@@ -64,8 +66,10 @@ test('Kanban board set header', async ({page}) => {
   await page.waitForLoadState('networkidle');
 
   await page.getByRole('button', {name: 'Select attribute'}).click();
+  await expect(page.locator('a').filter({hasText: 'Status'})).toBeVisible();
+  await page.waitForTimeout(500);
+
   await page.locator('a').filter({hasText: 'Status'}).click();
-  await page.waitForTimeout(200);
 
   await expect(page.locator('kanban-column')).toHaveCount(3);
 
@@ -99,7 +103,7 @@ test('dragging', async ({page}) => {
   await prepareKanbanBoard(page);
 
   // simulating drag and drop
-  await page.locator('kanban-column').nth(1).locator('post-it').nth(0).hover();
+  await page.locator('post-it:has-text("Analyze UI tests scenarios")').hover();
   await page.mouse.down();
   // needs to be twice to simulate dragover
   await page.locator('kanban-column').nth(0).locator('post-it').nth(0).hover();
@@ -112,7 +116,7 @@ test('dragging', async ({page}) => {
   await expect(page.locator('kanban-column').nth(1).locator('post-it')).toHaveCount(2);
 
   // simulating drag and drop
-  await page.locator('kanban-column').nth(0).locator('post-it').nth(1).hover();
+  await page.locator('post-it:has-text("Analyze UI tests scenarios")').hover();
   await page.mouse.down();
   // needs to be twice to simulate dragover
   await page.locator('kanban-column').nth(1).locator('post-it').nth(0).hover();
@@ -221,6 +225,7 @@ test('Add new record', async ({page}) => {
 
   await page.locator('datetime-data-input').getByRole('textbox').click();
   await page.locator('datetime-data-input').getByRole('textbox').dblclick();
+  await expect(page.locator('datetime-data-input').getByRole('textbox')).toBeEditable();
   await page.locator('datetime-data-input').getByRole('textbox').fill('2023-09-05');
   await page.keyboard.press('Enter');
 
