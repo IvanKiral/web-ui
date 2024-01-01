@@ -98,6 +98,9 @@ test('On boarding path', async ({page, request}) => {
   // eslint-disable-next-line no-console
   console.log(parsed_body);
 
+  // eslint-disable-next-line no-console
+  console.log(parsed_body['accessToken']);
+
   const res = await request.post('http://localhost:8080/lumeer-engine/rest/users/current/emailVerified', {
     headers: {
       Authorization: `Bearer ${parsed_body['accessToken']}`,
