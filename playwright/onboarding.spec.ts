@@ -95,11 +95,19 @@ test('On boarding path', async ({page, request}) => {
 
   const parsed_body = JSON.parse(await loginReponse.text());
 
-  await request.post('http://localhost:8080/lumeer-engine/rest/users/current/emailVerified', {
+  // eslint-disable-next-line no-console
+  console.log(parsed_body);
+
+  const res = await request.post('http://localhost:8080/lumeer-engine/rest/users/current/emailVerified', {
     headers: {
       Authorization: `Bearer ${parsed_body['access_token']}`,
     },
   });
+
+  // eslint-disable-next-line no-console
+  console.log(res.status);
+  // eslint-disable-next-line no-console
+  console.log(await res.text());
 
   await page.waitForTimeout(10000);
 
