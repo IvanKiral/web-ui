@@ -100,7 +100,7 @@ test('On boarding path', async ({page, request}) => {
 
   const res = await request.post('http://localhost:8080/lumeer-engine/rest/users/current/emailVerified', {
     headers: {
-      Authorization: `Bearer ${parsed_body['access_token']}`,
+      Authorization: `Bearer ${parsed_body['accessToken']}`,
     },
   });
 
