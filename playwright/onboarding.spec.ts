@@ -95,11 +95,22 @@ test('On boarding path', async ({page, request}) => {
 
   const parsed_body = JSON.parse(await loginReponse.text());
 
-  await request.post('http://localhost:8080/lumeer-engine/rest/users/current/emailVerified', {
+  // eslint-disable-next-line no-console
+  console.log(parsed_body);
+
+  // eslint-disable-next-line no-console
+  console.log(parsed_body['accessToken']);
+
+  const res = await request.post('http://localhost:8080/lumeer-engine/rest/users/current/emailVerified', {
     headers: {
-      Authorization: `Bearer ${parsed_body['access_token']}`,
+      Authorization: `Bearer ${parsed_body['accessToken']}`,
     },
   });
+
+  // eslint-disable-next-line no-console
+  console.log(res.status());
+  // eslint-disable-next-line no-console
+  console.log(await res.text());
 
   await page.waitForTimeout(10000);
 
@@ -121,7 +132,7 @@ test('On boarding path', async ({page, request}) => {
 
 test('prepare auth token', async ({request}) => {
   const loginParsedBody = await loginApiCall(request, userEmail, userPassword);
-  const authToken = loginParsedBody['access_token'];
+  const authToken = loginParsedBody['accessToken'];
 
   if (!authToken) {
     throw new Error('could not login');
