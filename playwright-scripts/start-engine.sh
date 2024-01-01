@@ -14,8 +14,7 @@ else
 fi
 
 chmod +w ./lumeer-core/src/main/resources/defaults-dev.properties
-echo $'\n' >> ./lumeer-core/src/main/resources/defaults-dev.properties
-echo $"admin_user_emails=$TEST_USER_EMAIL" >> ./lumeer-core/src/main/resources/defaults-dev.properties
+sed -i '' "s/admin_user_emails=aturing@lumeer.io/admin_user_emails=$TEST_USER_EMAIL/1" file.txt
 echo "Building engine..."
 mvn install -DskipTests -DskipITs -B --quiet
 cd war
