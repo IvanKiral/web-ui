@@ -105,7 +105,7 @@ test('On boarding path', async ({page, request}) => {
   });
 
   // eslint-disable-next-line no-console
-  console.log(res.status);
+  console.log(res.status());
   // eslint-disable-next-line no-console
   console.log(await res.text());
 
@@ -129,7 +129,7 @@ test('On boarding path', async ({page, request}) => {
 
 test('prepare auth token', async ({request}) => {
   const loginParsedBody = await loginApiCall(request, userEmail, userPassword);
-  const authToken = loginParsedBody['access_token'];
+  const authToken = loginParsedBody['accessToken'];
 
   if (!authToken) {
     throw new Error('could not login');
